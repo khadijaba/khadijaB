@@ -30,16 +30,13 @@ pipeline {
             }
         }
 
-    stage('SonarQube Analysis') {
-    steps {
-        withSonarQubeEnv('My-SonarQube') {
-            sh "mvn sonar:sonar -Dsonar.projectKey=TP_Project -Dsonar.login=$SONARQUBE_TOKEN"
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('My-SonarQube') {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=TP_Project -Dsonar.login=$SONARQUBE_TOKEN"
+                }
+            }
         }
-    }
-}
-
-    }
-}
 
         stage('Build JAR') {
             steps {
