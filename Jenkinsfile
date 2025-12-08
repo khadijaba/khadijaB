@@ -1,10 +1,12 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven-3.6.3'   // correspond au nom configuré dans Jenkins
-        jdk 'JAVA17'          // correspond au nom configuré dans Jenkins
+   environment {
+        SONARQUBE_TOKEN = credentials('sonar-token')
+        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64/"
+        PATH = "${JAVA_HOME}/bin:/opt/apache-maven-3.6.3/bin:${env.PATH}"
     }
+
 
    environment {
     SONARQUBE_TOKEN = credentials('sonar-token')
