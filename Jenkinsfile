@@ -30,15 +30,14 @@ pipeline {
             }
         }
 
-     stage('SonarQube Analysis') {
+    stage('SonarQube Analysis') {
     steps {
         withSonarQubeEnv('My-SonarQube') {
-            sh """
-                mvn sonar:sonar \
-                -Dsonar.projectKey=TP_Project \
-                -Dsonar.login=$SONARQUBE_TOKEN
-            """
+            sh "mvn sonar:sonar -Dsonar.projectKey=TP_Project -Dsonar.login=$SONARQUBE_TOKEN"
         }
+    }
+}
+
     }
 }
 
