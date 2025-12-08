@@ -1,17 +1,13 @@
 pipeline {
     agent any
 
-   environment {
+    environment {
+        // Credentials pour SonarQube
         SONARQUBE_TOKEN = credentials('sonar-token')
+        // Chemins vers Java et Maven
         JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64/"
         PATH = "${JAVA_HOME}/bin:/opt/apache-maven-3.6.3/bin:${env.PATH}"
     }
-
-
-   environment {
-    SONARQUBE_TOKEN = credentials('sonar-token')
-}
-
 
     stages {
         stage('Checkout Code') {
@@ -34,20 +30,17 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            environment {
-                scannerHome = tool 'SonarScanner'
-            }
-            steps {
-                withSonarQubeEnv('My-SonarQube') {
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=TP_Project \
-                        -Dsonar.login=$SONARQUBE_TOKEN
-                    """
-                }
-            }
+     stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('My-SonarQube') {
+            sh """
+                mvn sonar:sonar \
+                -Dsonar.projectKey=TP_Project \
+                -Dsonar.login=$SONARQUBE_TOKEN
+            """
         }
+    }
+}
 
         stage('Build JAR') {
             steps {
@@ -58,10 +51,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline CI terminée avec succès !"
+            echo "Pipeline CI terminée avec succès ! ✅"
         }
         failure {
-            echo "Erreur dans la pipeline."
+            echo "Erreur dans la pipeline ❌"
         }
     }
 }
