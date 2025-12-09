@@ -47,8 +47,10 @@ pipeline {
     }
 
     post {
-        success {
-            echo "Pipeline CI terminée avec succès ! ✅"
-        }
-        failure {
-            echo "Erreur da
+    success {
+        echo "Pipeline CI terminée avec succès ! ✅"
+    }
+    failure {
+        echo "Erreur dans la pipeline ❌"
+    }
+}
