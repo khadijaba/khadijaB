@@ -2,14 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // Credentials pour SonarQube
-        SONARQUBE_TOKEN = credentials('sonar-token')
-        // Chemins vers Java et Maven
         JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64/"
         PATH = "${JAVA_HOME}/bin:/opt/apache-maven-3.6.3/bin:${env.PATH}"
     }
 
     stages {
+
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
@@ -33,7 +31,10 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('My-SonarQube') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=TP_Project -Dsonar.login=$SONARQUBE_TOKEN"
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=TP_Project
+                    """
                 }
             }
         }
@@ -50,7 +51,4 @@ pipeline {
             echo "Pipeline CI terminée avec succès ! ✅"
         }
         failure {
-            echo "Erreur dans la pipeline ❌"
-        }
-    }
-}
+            echo "Erreur da
