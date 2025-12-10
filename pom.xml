@@ -2,33 +2,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+
     <groupId>tn.esprit</groupId>
     <artifactId>TP-Projet-2025</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>TP-Projet-2025</name>
     <description>TP-Projet-2025</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+
     <properties>
         <java.version>17</java.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -86,7 +77,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.24</version> <!-- Added Lombok version here -->
+                            <version>1.18.24</version>
                         </path>
                         <path>
                             <groupId>org.mapstruct</groupId>
@@ -105,6 +96,13 @@
                 <configuration>
                     <mainClass>tn.esprit.tpprojet2025.TpProjet2025Application</mainClass>
                 </configuration>
+            </plugin>
+
+            <!-- SonarQube Plugin for Maven -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.9.0.2155</version> <!-- Ensure this version is up-to-date -->
             </plugin>
         </plugins>
     </build>
