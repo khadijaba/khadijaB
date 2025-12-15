@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+        // ===== CI =====
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
@@ -30,10 +31,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('My-SonarQube') {
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=TP_Project
-                    """
+                    sh "mvn sonar:sonar -Dsonar.projectKey=TP_Project"
                 }
             }
         }
@@ -44,9 +42,10 @@ pipeline {
             }
         }
 
+        // ===== CD =====
         stage('Build Docker Image') {
             steps {
-                // On utilise le numéro de build Jenkins pour taguer l'image
+                // Tag avec le numéro de build Jenkins
                 sh "docker build -t khadijaba/tp-app:${env.BUILD_NUMBER} ."
             }
         }
@@ -63,8 +62,19 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 // Met à jour le déploiement avec la nouvelle image
-                sh "kubectl set image deployment/tp-app tp-app=khadijaba/tp-app:${env.BUILD_NUMBER}"
+                sh "kubectl set image deployment/tp-deployment tp-app=khadijaba/tp-app:${env.BUILD_NUMBER}"
+                // Applique le service si nécessaire
                 sh "kubectl apply -f service.yaml"
+            }
+        }
+
+        stage('Test Deployment') {
+            steps {
+                script {
+                    // Récupère l'URL exposée par Minikube et teste l'application
+                    def url = sh(script: "minikube service tp-service --url", returnStdout: true).trim()
+                    sh "curl -v $url"
+                }
             }
         }
     }
