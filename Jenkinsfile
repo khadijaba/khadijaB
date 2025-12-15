@@ -36,18 +36,17 @@ pipeline {
             }
         }
 
-       stage('Build JAR') {
-    steps {
-        sh "mvn package -Dmaven.test.skip=true"
-    }
-}
-
+        stage('Build JAR') {
+            steps {
+                sh "mvn package -Dmaven.test.skip=true"
+            }
+        }
 
         // ===== CD =====
         stage('Build Docker Image') {
             steps {
-                // Tag avec le numéro de build Jenkins
-                sh "docker build -t khadijaba/tp-app:${env.BUILD_NUMBER} ."
+                // Build Docker avec le numéro de build Jenkins
+                sh "sudo docker build -t khadijaba/tp-app:${env.BUILD_NUMBER} ."
             }
         }
 
@@ -64,6 +63,7 @@ pipeline {
             steps {
                 // Met à jour le déploiement avec la nouvelle image
                 sh "kubectl set image deployment/tp-deployment tp-app=khadijaba/tp-app:${env.BUILD_NUMBER}"
+                sh "kubectl rollout status deployment/tp-deployment"
                 // Applique le service si nécessaire
                 sh "kubectl apply -f service.yaml"
             }
@@ -82,10 +82,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline CI/CD terminée avec succès ! "
+            echo "Pipeline CI/CD terminée avec succès !"
         }
         failure {
-            echo "Erreur dans la pipeline "
+            echo "Erreur dans la pipeline"
         }
     }
 }
