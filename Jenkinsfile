@@ -36,10 +36,12 @@ pipeline {
             }
         }
 
-        stage('Build JAR') {
-            steps {
-                sh "mvn package -DskipTests"
-            }
+       stage('Build JAR') {
+    steps {
+        sh "mvn package -Dmaven.test.skip=true"
+    }
+}
+
         }
 
         // ===== CD =====
