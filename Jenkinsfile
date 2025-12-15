@@ -42,7 +42,6 @@ pipeline {
     }
 }
 
-        }
 
         // ===== CD =====
         stage('Build Docker Image') {
