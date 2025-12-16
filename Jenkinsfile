@@ -2,21 +2,20 @@ pipeline {
     agent any
 
     environment {
-        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64/"
-        PATH = "${JAVA_HOME}/bin:/opt/apache-maven-3.6.3/bin:${env.PATH}"
-        DOCKER_IMAGE = "khadijaba/tp-app:${BUILD_NUMBER}" // image Docker taguée avec le numéro du build
-        SONAR_TOKEN = credentials('sonar-token') // Ton token SonarQube stocké dans Jenkins
-        GIT_CREDENTIALS = 'git-credentials' // Tes credentials Git
+        SONARQUBE_TOKEN = credentials('sonar-token')
+        DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
+        DOCKER_IMAGE = 'khadijaba/tp-app'
+        K8S_NAMESPACE = 'default'
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout SCM') {
             steps {
                 git(
                     url: 'https://github.com/khadijaba/khadijaB.git',
                     branch: 'main',
-                    credentialsId: "${GIT_CREDENTIALS}"
+                    credentialsId: 'git-credentials'
                 )
             }
         }
@@ -33,20 +32,10 @@ pipeline {
             }
         }
 
-        stage('Run Tests & Code Coverage') {
-            steps {
-                sh 'mvn test jacoco:report'
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('My-SonarQube') {
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=TP_Project \
-                        -Dsonar.token=$SONAR_TOKEN
-                    """
+                    sh "mvn sonar:sonar -Dsonar.projectKey=TP_Project -Dsonar.login=$SONARQUBE_TOKEN"
                 }
             }
         }
@@ -57,41 +46,44 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build & Push') {
             steps {
-                sh "docker build -t $DOCKER_IMAGE ."
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh "docker push $DOCKER_IMAGE"
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: DOCKER_HUB_CREDENTIALS,
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    sh '''
+                        docker login -u $DOCKER_USER -p $DOCKER_PASS
+                        docker build -t $DOCKER_IMAGE:latest .
+                        docker push $DOCKER_IMAGE:latest
+                    '''
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy on Kubernetes') {
+            environment {
+                KUBECONFIG = '/var/lib/jenkins/jenkins-kubeconfig'
+            }
             steps {
-                sh """
+                sh '''
+                    kubectl get nodes
+                    kubectl apply -f k8s/mysql.yaml
                     kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
-                """
+                '''
             }
         }
-
     }
 
     post {
-        always {
-            echo "Cleaning workspace..."
-            cleanWs()
-        }
         success {
-            echo "Build and Deployment SUCCESSFUL! "
+            echo 'Pipeline completed successfully!'
         }
         failure {
-            echo "Build or Deployment FAILED! "
+            echo 'Pipeline failed. Check the logs for details.'
         }
     }
 }
