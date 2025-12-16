@@ -4,91 +4,94 @@ pipeline {
     environment {
         JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64/"
         PATH = "${JAVA_HOME}/bin:/opt/apache-maven-3.6.3/bin:${env.PATH}"
+        DOCKER_IMAGE = "khadijaba/tp-app:${BUILD_NUMBER}" // image Docker taguée avec le numéro du build
+        SONAR_TOKEN = credentials('sonar-token') // Ton token SonarQube stocké dans Jenkins
+        GIT_CREDENTIALS = 'git-credentials' // Tes credentials Git
     }
 
     stages {
-        // ===== CI =====
+
         stage('Checkout Code') {
             steps {
-                git branch: 'main',
-                    credentialsId: 'git-credentials',
-                    url: 'https://github.com/khadijaba/khadijaB.git'
+                git(
+                    url: 'https://github.com/khadijaba/khadijaB.git',
+                    branch: 'main',
+                    credentialsId: "${GIT_CREDENTIALS}"
+                )
             }
         }
 
         stage('Clean Project') {
             steps {
-                sh "mvn clean"
+                sh 'mvn clean'
             }
         }
 
         stage('Compile Project') {
             steps {
-                sh "mvn compile"
+                sh 'mvn compile'
+            }
+        }
+
+        stage('Run Tests & Code Coverage') {
+            steps {
+                sh 'mvn test jacoco:report'
             }
         }
 
         stage('SonarQube Analysis') {
-    steps {
-        withSonarQubeEnv('My-SonarQube') {
-            sh """
-            mvn sonar:sonar \
-            -Dsonar.projectKey=TP_Project \
-            -Dsonar.login=${SONAR_AUTH_TOKEN}
-            """
-        }
-    }
-}
-
-
-        stage('Build JAR') {
             steps {
-                // Ignorer les tests pour éviter l'erreur de Spring Boot
-                sh "mvn package -Dmaven.test.skip=true"
+                withSonarQubeEnv('My-SonarQube') {
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=TP_Project \
+                        -Dsonar.token=$SONAR_TOKEN
+                    """
+                }
             }
         }
 
-        // ===== CD =====
+        stage('Build JAR') {
+            steps {
+                sh 'mvn package -DskipTests'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
-                // Supprimer 'sudo' car Jenkins est déjà dans le groupe docker
-                sh "docker build -t khadijaba/tp-app:${env.BUILD_NUMBER} ."
+                sh "docker build -t $DOCKER_IMAGE ."
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    sh "docker push khadijaba/tp-app:${env.BUILD_NUMBER}"
+                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
+                    sh "docker push $DOCKER_IMAGE"
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh "kubectl set image deployment/tp-deployment tp-app=khadijaba/tp-app:${env.BUILD_NUMBER}"
-                sh "kubectl rollout status deployment/tp-deployment"
-                sh "kubectl apply -f service.yaml"
+                sh """
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
+                """
             }
         }
 
-        stage('Test Deployment') {
-            steps {
-                script {
-                    def url = sh(script: "minikube service tp-service --url", returnStdout: true).trim()
-                    sh "curl -v $url"
-                }
-            }
-        }
     }
 
     post {
+        always {
+            echo "Cleaning workspace..."
+            cleanWs()
+        }
         success {
-            echo "Pipeline CI/CD terminée avec succès !"
+            echo "Build and Deployment SUCCESSFUL! "
         }
         failure {
-            echo "Erreur dans la pipeline"
+            echo "Build or Deployment FAILED! "
         }
     }
 }
