@@ -29,12 +29,17 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('My-SonarQube') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=TP_Project"
-                }
-            }
+    steps {
+        withSonarQubeEnv('My-SonarQube') {
+            sh """
+            mvn sonar:sonar \
+            -Dsonar.projectKey=TP_Project \
+            -Dsonar.login=${SONAR_AUTH_TOKEN}
+            """
         }
+    }
+}
+
 
         stage('Build JAR') {
             steps {
