@@ -4,7 +4,7 @@ pipeline {
     environment {
         SONARQUBE_TOKEN = credentials('sonar-token')
         DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
-        DOCKER_IMAGE = 'khadijaba/tp-app'
+        DOCKER_IMAGE = 'khadijabenayed/tp-app'
         K8S_NAMESPACE = 'default'
     }
 
