@@ -35,7 +35,11 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('My-SonarQube') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=TP_Project -Dsonar.login=$SONARQUBE_TOKEN"
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=TP_Project \
+                        -Dsonar.login=$SONARQUBE_TOKEN
+                    """
                 }
             }
         }
@@ -66,13 +70,15 @@ pipeline {
 
         stage('Deploy on Kubernetes') {
             environment {
-                KUBECONFIG = '/var/lib/jenkins/jenkins-kubeconfig'
+                KUBECONFIG = '/var/lib/jenkins/.kube/config'
             }
             steps {
                 sh '''
                     kubectl get nodes
-                    kubectl apply -f k8s/mysql.yaml
-                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f K8S/mysql-deployment.yaml
+                    kubectl apply -f K8S/mysql-service.yaml
+                    kubectl apply -f K8S/deployment.yaml
+                    kubectl apply -f K8S/service.yaml
                 '''
             }
         }
@@ -80,10 +86,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo ' Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check the logs for details.'
+            echo ' Pipeline failed. Check the logs.'
         }
     }
 }
