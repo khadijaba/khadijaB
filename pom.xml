@@ -64,6 +64,20 @@
             <version>1.5.5.Final</version>
             <scope>provided</scope>
         </dependency>
+
+
+             <!-- Spring Boot Actuator -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+
+<!-- Micrometer pour Prometheus -->
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+
     </dependencies>
 
    <build>
