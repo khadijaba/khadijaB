@@ -1,23 +1,21 @@
-package tn.esprit.tpprojet2025.config;
+package tn.esprit.tpprojet2025;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
-public class SecurityConfig {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/prometheus").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
-                .anyRequest().authenticated()
-            )
-            .csrf(csrf -> csrf.disable());
-
-        return http.build();
+            .authorizeHttpRequests()
+            .requestMatchers("/actuator/prometheus").permitAll() // <-- important
+            .anyRequest().authenticated()
+            .and()
+            .httpBasic()
+            .and()
+            .csrf().disable();
     }
 }
