@@ -1,20 +1,22 @@
 package t.e.t.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeRequests()
-                .requestMatchers("/tpProjet/actuator/prometheus").permitAll() // autoriser Prometheus
-                .anyRequest().authenticated() // le reste sécurisé
-            .and()
-            .csrf().disable()
-            .formLogin().disable();
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/tpProjet/actuator/prometheus").permitAll() // autorise Prometheus
+                .anyRequest().authenticated()
+            )
+            .csrf(csrf -> csrf.disable())
+            .formLogin(form -> form.disable());
+        return http.build();
     }
 }
