@@ -1,22 +1,21 @@
-package tn.esprit.tpprojet2025;
+package t.e.t.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
-public class SecurityConfig {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll() // Autoriser Prometheus
-                .anyRequest().authenticated()              // Authentification pour le reste
-            )
-            .csrf(csrf -> csrf.disable())                  // Désactiver CSRF pour API
-            .httpBasic();                                 // Basic auth pour les autres endpoints si besoin
-        return http.build();
+            .authorizeRequests()
+                .requestMatchers("/tpProjet/actuator/prometheus").permitAll() // autorise Prometheus
+                .anyRequest().authenticated() // le reste reste sécurisé
+            .and()
+            .httpBasic().disable()
+            .formLogin().disable()
+            .csrf().disable(); // désactive CSRF pour Actuator
     }
 }
